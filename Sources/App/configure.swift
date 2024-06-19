@@ -53,7 +53,7 @@ class LightObserver{
                 firstLaunch = false
             } else if !lightIsOn {
                 //sendMessageToTelegramBot(message: "Success: \(resultICMP)")
-                sendMessageToTelegramBot(message: "⚡ Світло повернулося ⚡")
+                sendMessageToTelegramBot(message: "Світло ON 🟢")
                 lightIsOn = true
             }
         case .timeout:
@@ -62,7 +62,7 @@ class LightObserver{
                 lightIsOn = false
             } else if lightIsOn{
                 //sendMessageToTelegramBot(message: "Failure: \(resultICMP)")
-                sendMessageToTelegramBot(message: "❌ Світло зникло ❌")
+                sendMessageToTelegramBot(message: "Світло OFF ❌")
                 lightIsOn = false
             }
         case .unreachable:
@@ -71,7 +71,8 @@ class LightObserver{
                 lightIsOn = false
             } else if lightIsOn{
                 //sendMessageToTelegramBot(message: "Failure: \(resultICMP)")
-                sendMessageToTelegramBot(message: "❌ Світло зникло ❌")
+                sendMessageToTelegramBot(message: "Світло OFF ❌")
+                sendMessageToArtem(message: "Unreachable: \(resultICMP)")
                 lightIsOn = false
             }
         default:

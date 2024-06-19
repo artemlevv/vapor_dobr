@@ -55,10 +55,13 @@ class LightObserver{
         
         let address = (try? ICMPPing.IPAddress(ipV4, type: .ipv4))!
         
-        let resultICMP = ICMPPing.ping(address: address, timeout: 10)
+        var resultICMP = ICMPPing.ping(address: address, timeout: 10)
         
         print(resultICMP)
-      //  print("ISSuccess: \(resultICMP.responseType == .success)")
+      
+        if resultICMP.responseType != .success{
+            resultICMP = self.checkFailedPing(address: address)
+        }
         switch resultICMP.responseType {
         case .success:
             if firstLaunch{
@@ -87,8 +90,28 @@ class LightObserver{
                 sendMessageToArtem(message: "Unreachable: \(resultICMP)")
                 lightIsOn = false
             }
+        case .unsupported:
+            if firstLaunch{
+                firstLaunch = false
+                lightIsOn = false
+            } else if lightIsOn{
+                sendMessageToTelegramBot(message: "Світло OFF ❌")
+                sendMessageToArtem(message: "Unsupported: \(resultICMP)")
+                lightIsOn = false
+            }
         default:
             sendMessageToArtem(message: "Unknow: \(resultICMP)")
+        }
+    }
+
+    func checkFailedPing(address: ICMPPing.IPAddress, attempts: Int = 3) -> ICMPPing.Response{
+        let resultICMP = ICMPPing.ping(address: address, timeout: 10)
+        
+        print(resultICMP)
+        if resultICMP.responseType == .success || attempts == 1 {
+            return resultICMP
+        } else {
+            return checkFailedPing(address: address, attempts: attempts - 1)
         }
     }
     
@@ -200,113 +223,3 @@ class LightObserver{
 }
 
 
-/*
-
-enum PingResult {
-    case success
-    case failure
-}
-*/
-
-
-/*func pingIPv4(address: String) -> PingResult {
- /* let task = Process()
-  
-  #if os(Linux)
-  task.executableURL = URL(fileURLWithPath: "/bin/ping")
-  #else
-  task.launchPath = "/sbin/ping"
-  #endif
-  
-  task.arguments = ["-c", "4", address]
-  
-  let pipe = Pipe()
-  task.standardOutput = pipe
-  task.standardError = pipe
-  
-  task.launch()
-  task.waitUntilExit()
-  
-  let status = task.terminationStatus
-  if status == 0 {
-  return .success
-  } else {
-  return .failure
-  }*/
- return .success
- }*/
-
-/*
- 
- func performPing() {
-     /*let maxAttempts = 5
-      let intervalInSeconds = 2
-      var attempt = 0*/
-     let ipV4 = "176.36.6.27"
-     
-     let address = (try? ICMPPing.IPAddress(ipV4, type: .ipv4))!
-     
-     let resultICMP = ICMPPing.ping(address: address, timeout: 10)
-     
-     print(resultICMP)
-     print("ISSuccess: \(resultICMP.responseType == .success)")
-     switch resultICMP.responseType {
-     case .success:
-         if firstLaunch{
-             firstLaunch = false
-         } else if !lightIsOn {
-             //sendMessageToTelegramBot(message: "Success: \(resultICMP)")
-             sendMessageToTelegramBot(message: "⚡ Світло повернулося ⚡")
-             lightIsOn = true
-         }
-     case .timeout:
-         if firstLaunch{
-             firstLaunch = false
-             lightIsOn = false
-         } else if lightIsOn{
-             //sendMessageToTelegramBot(message: "Failure: \(resultICMP)")
-             sendMessageToTelegramBot(message: "❌ Світло зникло ❌")
-             lightIsOn = false
-         }
-     default:
-         sendMessageToArtem(message: "Unknow: \(resultICMP)")
-     }
-     
-     /*func pingWithRetry() {
-      attempt += 1
-      let address = (try? ICMPPing.IPAddress("176.36.6.27", type: .ipv4))!
-      
-      let resultICMP = ICMPPing.ping(address: address)
-      
-      print(resultICMP)
-      print("ISSuccess: \(resultICMP.responseType == .success)")
-      /* let result = pingIPv4(address: ipV4)
-       switch result {
-       case .success:
-       print("Ping successful")
-       if !lightIsOn{
-       lightIsOn = true
-       sendMessageToTelegramBot(message: "⚡ Світло повернулося ⚡")
-       }
-       case .failure:
-       print("Ping failed")
-       if lightIsOn{
-       if attempt < maxAttempts {
-       print("Retrying in \(intervalInSeconds) seconds...")
-       print("Atempt made: \(attempt)")
-       DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(intervalInSeconds)) {
-       pingWithRetry()
-       }
-       } else if lightIsOn{
-       print("Reached maximum number of attempts. Port down.")
-       lightIsOn = false
-       sendMessageToTelegramBot(message: "❌ Світло зникло ❌")
-       }
-       }
-       }*/
-      }*/
-     
-     //MARK: - need to rety
-     // pingWithRetry()
- }
- */

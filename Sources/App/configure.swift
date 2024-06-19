@@ -14,30 +14,42 @@ public func configure(_ app: Application) async throws {
 }
 
 struct PingOnStartupLifecycle: LifecycleHandler {
-    let lightObserver = LightObserver()
+    // prorizna: -1002233701341
+    // dobrohotova: -1002247766290
+    let lightObserver_Dobrohotova = LightObserver(ipV4: "176.36.6.27", chatID: "-1002247766290")
+    let lightObserver_Prorizna = LightObserver(ipV4: "62.205.131.4", chatID: "-1002233701341")
+    
     func didBoot(_ application: Application) throws {
         // Start the ping operation when the application is starting up
         application.eventLoopGroup.next().scheduleRepeatedTask(initialDelay: .seconds(0), delay: .seconds(120)) { task in
-            lightObserver.performPing()
+            lightObserver_Dobrohotova.performPing()
+            lightObserver_Prorizna.performPing()
         }
         print("Ping scheduled")
 
         // Send notification message to Telegram Bot
-        lightObserver.sendMessageToTelegramBot(message: "Оповіщення відключення світла ввімкнено 👍")
+        lightObserver_Prorizna.sendMessageToArtem(message: "Оповіщення світла Prorizna 👍")
+        lightObserver_Dobrohotova.sendMessageToArtem(message: "Оповіщення світла Dobrohotova 👍")
     }
     
     func shutdown(_ application: Application) {
         // Perform any cleanup or shutdown tasks if needed
         print("Shutting down...")
-        lightObserver.sendMessageToTelegramBot(message: "Оповіщення відключення світла вимкнено 👎")
+        //lightObserver.sendMessageToTelegramBot(message: "Оповіщення відключення світла вимкнено 👎")
     }
 }
-
 
 class LightObserver{
     var lightIsOn = true
     var firstLaunch = true
-    let ipV4 = "176.36.6.27"
+    let ipV4: String //"176.36.6.27"//= "176.36.6.27"
+    // MARK: - Chat Id of telegram channel
+    let chatID: String //"-1002233701341"
+    
+    init(ipV4: String, chatID: String){
+        self.ipV4 = ipV4
+        self.chatID = chatID
+    }
     
     func performPing() {
         
@@ -45,7 +57,7 @@ class LightObserver{
         
         let resultICMP = ICMPPing.ping(address: address, timeout: 10)
         
-       // print(resultICMP)
+        print(resultICMP)
       //  print("ISSuccess: \(resultICMP.responseType == .success)")
         switch resultICMP.responseType {
         case .success:
@@ -80,12 +92,11 @@ class LightObserver{
         }
     }
     
+    // https://api.telegram.org/bot7495300891:AAGnICXbczTinnMeV3DA366OsW1E_KUgTG4/getUpdates
     
     func sendMessageToTelegramBot(message: String) {
         // Construct the URL for the Telegram Bot API endpoint
         let botToken = "7495300891:AAGnICXbczTinnMeV3DA366OsW1E_KUgTG4"
-        //MARK: - Dobro_Home id chat
-        let chatID = "-1002247766290"
         //MARK: - Artem id chat
        // let chatID = "233609461"
         guard let urlString = "https://api.telegram.org/bot\(botToken)/sendMessage?chat_id=\(chatID)&text=\(message)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
@@ -138,8 +149,6 @@ class LightObserver{
     func sendMessageToArtem(message: String) {
         // Construct the URL for the Telegram Bot API endpoint
         let botToken = "7495300891:AAGnICXbczTinnMeV3DA366OsW1E_KUgTG4"
-        //MARK: - Dobro_Home id chat
-        // let chatID = "-1002247766290" this is group ID
         //MARK: - Artem id chat
         let chatID = "233609461"
         guard let urlString = "https://api.telegram.org/bot\(botToken)/sendMessage?chat_id=\(chatID)&text=\(message)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
